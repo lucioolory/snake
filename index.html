@@ -3,88 +3,63 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<title>Snake Game | Lucio</title>
+<title>Snake PRO | Lucio</title>
 
 <style>
 
-body{
-margin:0;
-height:100vh;
-display:flex;
-justify-content:center;
-align-items:center;
-flex-direction:column;
-background:linear-gradient(135deg,#0b0b0b,#1a1a1a);
-font-family:Poppins, sans-serif;
-color:white;
+body {
+  margin: 0;
+  background: radial-gradient(circle, #000, #050505);
+  font-family: Arial, sans-serif;
+  text-align: center;
+  color: white;
 }
 
-/* TITRE */
-
-h1{
-font-size:35px;
-background:linear-gradient(90deg,orange,red);
--webkit-background-clip:text;
--webkit-text-fill-color:transparent;
+h1 {
+  color: orange;
+  text-shadow: 0 0 10px orange;
 }
 
-/* SCORE */
-
-.score-box{
-display:flex;
-gap:30px;
-margin:10px;
-font-size:18px;
+canvas {
+  background: #111;
+  border: 3px solid orange;
+  border-radius: 12px;
+  box-shadow: 0 0 25px orange;
 }
 
-canvas{
-background:#111;
-border-radius:15px;
-box-shadow:0 0 25px rgba(255,140,0,0.5);
+.ui {
+  margin-top: 10px;
 }
 
-/* CONTROLES */
-
-.controls{
-margin-top:20px;
-display:flex;
-flex-direction:column;
-align-items:center;
-gap:10px;
+.controls {
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
-.controls div{
-display:flex;
-gap:10px;
+.controls div {
+  display: flex;
 }
 
-.controls button{
-padding:14px;
-font-size:20px;
-border:none;
-border-radius:12px;
-background:rgba(255,140,0,0.2);
-color:orange;
-backdrop-filter:blur(10px);
-cursor:pointer;
+.controls button {
+  width: 75px;
+  height: 75px;
+  margin: 8px;
+  font-size: 24px;
+  border-radius: 50%;
+  border: none;
+  background: linear-gradient(145deg, orange, #ff6600);
+  color: black;
 }
 
-.controls button:active{
-transform:scale(0.9);
-}
-
-/* BOUTON */
-
-.restart{
-margin-top:15px;
-padding:10px 25px;
-border:none;
-border-radius:20px;
-background:linear-gradient(135deg,orange,red);
-color:black;
-font-weight:bold;
-cursor:pointer;
+#restart {
+  display: none;
+  margin-top: 15px;
+  padding: 10px 20px;
+  background: orange;
+  border: none;
+  border-radius: 10px;
 }
 
 </style>
@@ -92,157 +67,165 @@ cursor:pointer;
 
 <body>
 
-<h1>Snake Game</h1>
+<h1>🐍 Snake PRO</h1>
 
-<div class="score-box">
-<div>Score : <span id="score">0</span></div>
-<div>Best : <span id="best">0</span></div>
+<div class="ui">
+Score: <span id="score">0</span> |
+Best: <span id="best">0</span>
 </div>
 
-<canvas id="game" width="400" height="400"></canvas>
+<canvas id="game" width="300" height="300"></canvas>
+
+<button id="restart" onclick="restartGame()">Recommencer</button>
 
 <div class="controls">
-<button onclick="setDirection('UP')">⬆️</button>
-<div>
-<button onclick="setDirection('LEFT')">⬅️</button>
-<button onclick="setDirection('DOWN')">⬇️</button>
-<button onclick="setDirection('RIGHT')">➡️</button>
+  <div>
+    <button onclick="changeDirection('up')">↑</button>
+  </div>
+  <div>
+    <button onclick="changeDirection('left')">←</button>
+    <button onclick="changeDirection('down')">↓</button>
+    <button onclick="changeDirection('right')">→</button>
+  </div>
 </div>
-</div>
-
-<button class="restart" onclick="restartGame()">Recommencer</button>
 
 <script>
 
 const canvas = document.getElementById("game")
 const ctx = canvas.getContext("2d")
 
-const box = 20
+let snake, direction, food, score, best, speed, gameOver
 
-let snake = [{x:200,y:200}]
-let direction = "RIGHT"
+function init(){
+  snake = [{x: 160, y: 160}]
+  direction = "right"
+  food = generateFood()
+  score = 0
+  speed = 120
+  gameOver = false
 
-let food = randomFood()
+  best = localStorage.getItem("bestSnake") || 0
+  document.getElementById("best").innerText = best
 
-let score = 0
-let best = localStorage.getItem("bestScore") || 0
-document.getElementById("best").innerText = best
-
-document.addEventListener("keydown",changeDirection)
-
-function randomFood(){
-return {
-x: Math.floor(Math.random()*20)*box,
-y: Math.floor(Math.random()*20)*box
+  document.getElementById("restart").style.display = "none"
 }
+
+// Générer nourriture (évite le snake)
+function generateFood(){
+  let newFood
+  do {
+    newFood = {
+      x: Math.floor(Math.random()*15)*20,
+      y: Math.floor(Math.random()*15)*20
+    }
+  } while(snake && snake.some(s => s.x === newFood.x && s.y === newFood.y))
+  
+  return newFood
+}
+
+// Empêche demi-tour
+function changeDirection(dir){
+  if(dir === "up" && direction !== "down") direction = dir
+  if(dir === "down" && direction !== "up") direction = dir
+  if(dir === "left" && direction !== "right") direction = dir
+  if(dir === "right" && direction !== "left") direction = dir
 }
 
 // clavier
-
-function changeDirection(e){
-if(e.key==="ArrowUp" && direction!=="DOWN") direction="UP"
-if(e.key==="ArrowDown" && direction!=="UP") direction="DOWN"
-if(e.key==="ArrowLeft" && direction!=="RIGHT") direction="LEFT"
-if(e.key==="ArrowRight" && direction!=="LEFT") direction="RIGHT"
-}
-
-// mobile
-
-function setDirection(dir){
-if(dir==="UP" && direction!=="DOWN") direction="UP"
-if(dir==="DOWN" && direction!=="UP") direction="DOWN"
-if(dir==="LEFT" && direction!=="RIGHT") direction="LEFT"
-if(dir==="RIGHT" && direction!=="LEFT") direction="RIGHT"
-}
-
-// dessin
+document.addEventListener("keydown",(e)=>{
+  if(e.key==="ArrowUp") changeDirection("up")
+  if(e.key==="ArrowDown") changeDirection("down")
+  if(e.key==="ArrowLeft") changeDirection("left")
+  if(e.key==="ArrowRight") changeDirection("right")
+})
 
 function draw(){
 
-// fond
-ctx.fillStyle="#111"
-ctx.fillRect(0,0,400,400)
+  if(gameOver){
+    ctx.fillStyle="white"
+    ctx.font="20px Arial"
+    ctx.fillText("GAME OVER",80,150)
 
-// serpent
-for(let i=0;i<snake.length;i++){
+    if(score > best){
+      localStorage.setItem("bestSnake", score)
+    }
 
-ctx.fillStyle = i==0 ? "orange" : "#ffb347"
+    document.getElementById("restart").style.display = "block"
+    return
+  }
 
-ctx.shadowColor="orange"
-ctx.shadowBlur=10
+  // fond
+  ctx.fillStyle="#111"
+  ctx.fillRect(0,0,300,300)
 
-ctx.fillRect(snake[i].x,snake[i].y,box,box)
+  // snake glow
+  ctx.shadowBlur = 15
+  ctx.shadowColor = "orange"
 
-ctx.shadowBlur=0
+  ctx.fillStyle="orange"
+  snake.forEach(s => {
+    ctx.fillRect(s.x, s.y, 20, 20)
+  })
+
+  ctx.shadowBlur = 0
+
+  // food
+  ctx.shadowBlur = 15
+  ctx.shadowColor = "red"
+
+  ctx.fillStyle="red"
+  ctx.fillRect(food.x, food.y, 20, 20)
+
+  ctx.shadowBlur = 0
+
+  // mouvement
+  let head = { ...snake[0] }
+
+  if(direction==="up") head.y -= 20
+  if(direction==="down") head.y += 20
+  if(direction==="left") head.x -= 20
+  if(direction==="right") head.x += 20
+
+  snake.unshift(head)
+
+  // collision mur
+  if(head.x < 0 || head.y < 0 || head.x >= 300 || head.y >= 300){
+    gameOver = true
+  }
+
+  // collision soi-même
+  for(let i=1;i<snake.length;i++){
+    if(head.x === snake[i].x && head.y === snake[i].y){
+      gameOver = true
+    }
+  }
+
+  // ✅ CORRECTION MANGER (PARFAITE)
+  if(head.x === food.x && head.y === food.y){
+    score++
+    food = generateFood()
+
+    // vitesse progressive douce
+    if(score % 3 === 0){
+      speed = Math.max(70, speed - 3)
+    }
+
+  } else {
+    snake.pop()
+  }
+
+  document.getElementById("score").innerText = score
+
+  setTimeout(draw, speed)
 }
-
-// nourriture
-ctx.fillStyle="red"
-ctx.beginPath()
-ctx.arc(food.x+10,food.y+10,8,0,Math.PI*2)
-ctx.fill()
-
-let snakeX = snake[0].x
-let snakeY = snake[0].y
-
-if(direction==="LEFT") snakeX-=box
-if(direction==="UP") snakeY-=box
-if(direction==="RIGHT") snakeX+=box
-if(direction==="DOWN") snakeY+=box
-
-// manger
-if(snakeX==food.x && snakeY==food.y){
-
-score++
-document.getElementById("score").innerText=score
-
-food = randomFood()
-
-}else{
-snake.pop()
-}
-
-let newHead={x:snakeX,y:snakeY}
-
-// collision
-if(
-snakeX<0 || snakeX>=400 ||
-snakeY<0 || snakeY>=400 ||
-collision(newHead,snake)
-){
-
-if(score > best){
-localStorage.setItem("bestScore", score)
-}
-
-clearInterval(game)
-
-setTimeout(()=>{
-alert("Game Over ! Score : "+score)
-},100)
-
-}
-
-snake.unshift(newHead)
-
-}
-
-function collision(head,array){
-for(let i=0;i<array.length;i++){
-if(head.x==array[i].x && head.y==array[i].y){
-return true
-}
-}
-return false
-}
-
-let speed = 120
-
-let game = setInterval(draw, speed)
 
 function restartGame(){
-location.reload()
+  init()
+  draw()
 }
+
+init()
+draw()
 
 </script>
 
